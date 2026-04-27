@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PropMap — Real Estate Platform</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- AUTH MODAL -->
+<div id="authOverlay" class="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="brand-icon">⬡</span>
+      <h1>PropMap</h1>
+      <p>Portugal Real Estate Intelligence</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Login</button>
+      <button class="auth-tab" data-tab="register">Register</button>
+    </div>
+    <div id="loginForm" class="auth-form active">
+      <input type="email" id="loginEmail" placeholder="Email" value="admin@platform.pt" />
+      <input type="password" id="loginPassword" placeholder="Password" value="admin123" />
+      <button class="btn-primary" onclick="doLogin()">Sign In</button>
+      <p class="auth-hint">Demo: admin@platform.pt / admin123</p>
+    </div>
+    <div id="registerForm" class="auth-form">
+      <input type="text" id="regName" placeholder="Full name" />
+      <input type="email" id="regEmail" placeholder="Email" />
+      <input type="password" id="regPassword" placeholder="Password" />
+      <input type="text" id="regAgency" placeholder="Agency name" />
+      <button class="btn-primary" onclick="doRegister()">Create Account</button>
+    </div>
+    <div id="authError" class="auth-error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="app hidden">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <span class="brand-icon">⬡</span>
+        <span class="brand-name">PropMap</span>
+      </div>
+      <div class="user-chip" id="userChip"></div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="sidebar-section">
+      <h4 class="section-label">Filters</h4>
+      <div class="filter-group">
+        <select id="filterType">
+          <option value="">All types</option>
+          <option value="House">House</option>
+          <option value="Apartment">Apartment</option>
+          <option value="Land">Land</option>
+          <option value="Commercial">Commercial</option>
+        </select>
+        <select id="filterCity">
+          <option value="">All cities</option>
+          <option value="Leiria">Leiria</option>
+          <option value="Batalha">Batalha</option>
+          <option value="Porto de Mós">Porto de Mós</option>
+          <option value="Alcobaça">Alcobaça</option>
+          <option value="Nazaré">Nazaré</option>
+          <option value="Marinha Grande">Marinha Grande</option>
+        </select>
+        <div class="range-row">
+          <input type="number" id="filterMinPrice" placeholder="Min €" />
+          <input type="number" id="filterMaxPrice" placeholder="Max €" />
+        </div>
+        <button class="btn-filter" onclick="applyFilters()">Apply</button>
+        <button class="btn-clear" onclick="clearFilters()">Clear</button>
+      </div>
+    </div>
+
+    <!-- VIEW TOGGLE -->
+    <div class="sidebar-section">
+      <h4 class="section-label">Map Layer</h4>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="btnMarkers" onclick="setLayer('markers')">Markers</button>
+        <button class="toggle-btn" id="btnHeat" onclick="setLayer('heat')">Heatmap</button>
+      </div>
+    </div>
+
+    <!-- PROPERTY LIST -->
+    <div class="sidebar-section grow">
+      <h4 class="section-label">Listings <span id="listingCount" class="count-badge">0</span></h4>
+      <div id="propertyList" class="property-list"></div>
+    </div>
+
+    <!-- ADD PROPERTY -->
+    <div class="sidebar-section">
+      <button class="btn-add" onclick="openAddModal()">＋ Add Property</button>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Sign out</button>
+  </aside>
+
+  <!-- MAP + STATS -->
+  <main id="mainArea">
+    <!-- STATS BAR -->
+    <div id="statsBar">
+      <div class="stat-card">
+        <span class="stat-label">Total Listings</span>
+        <span class="stat-value" id="statTotal">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Avg. Price</span>
+        <span class="stat-value" id="statAvg">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Top City</span>
+        <span class="stat-value" id="statCity">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Top Type</span>
+        <span class="stat-value" id="statType">—</span>
+      </div>
+    </div>
+
+    <div id="map"></div>
+  </main>
+</div>
+
+<!-- ADD PROPERTY MODAL -->
+<div id="addModal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>New Property</h3>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <input type="text" id="addName" placeholder="Property name *" />
+        <select id="addType">
+          <option value="House">House</option>
+          <option value="Apartment">Apartment</option>
+          <option value="Land">Land</option>
+          <option value="Commercial">Commercial</option>
+        </select>
+        <input type="number" id="addPrice" placeholder="Price (€) *" />
+        <input type="number" id="addArea" placeholder="Area (m²)" />
+        <input type="number" id="addBedrooms" placeholder="Bedrooms" min="0" />
+        <input type="text" id="addCity" placeholder="City *" />
+        <input type="text" id="addDescription" placeholder="Description" />
+        <input type="number" id="addLat" placeholder="Latitude *" step="any" />
+        <input type="number" id="addLng" placeholder="Longitude *" step="any" />
+      </div>
+      <p class="form-hint">💡 Click anywhere on the map to auto-fill coordinates, then open this form.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-primary" onclick="submitProperty()">Add Listing</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
