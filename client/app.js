@@ -1,5 +1,5 @@
 // ── CONFIG ──────────────────────────────────────────
-const API = "http://localhost:3000/api";
+const API = "/api";
 
 // ── STATE ───────────────────────────────────────────
 let token = localStorage.getItem("token") || null;
