@@ -11,8 +11,7 @@ let users = [
     id: 1,
     name: "Admin",
     email: "admin@platform.pt",
-    // password: admin123
-    password: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
+    password: "admin123",
     role: "admin",
     agency: "Imobiliária Central"
   }
@@ -50,8 +49,8 @@ router.post("/login", async (req, res) => {
 
   if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
-  const valid = await bcrypt.compare(password, user.password);
-  if (!valid) return res.status(401).json({ error: "Invalid credentials" });
+const valid = password === user.password;
+if (!valid) return res.status(401).json({ error: "Invalid credentials" });
 
   const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, SECRET, { expiresIn: "7d" });
   res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, agency: user.agency } });
