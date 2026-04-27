@@ -15,10 +15,10 @@ const map = L.map("map", { zoomControl: false }).setView([39.68, -8.85], 10);
 
 L.control.zoom({ position: "bottomright" }).addTo(map);
 
-// Dark map tiles
-L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-  attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-  maxZoom: 19
+// Google map tiles
+L.tileLayer("https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
+  attribution: '&copy; Google Maps',
+  maxZoom: 20
 }).addTo(map);
 
 // Click to capture coords for add form
