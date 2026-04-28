@@ -12,6 +12,7 @@ let lastClickCoords = null;
 
 // ── MAP SETUP ────────────────────────────────────────
 const map = L.map("map", { zoomControl: false }).setView([39.68, -8.85], 10);
+setTimeout(() => map.invalidateSize(), 100);
 
 L.control.zoom({ position: "bottomright" }).addTo(map);
 
